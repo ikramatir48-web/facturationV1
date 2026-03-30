@@ -1,6 +1,6 @@
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth.jsx'
-import { Flame, LayoutDashboard, ShoppingCart, Users, Package, FileText, LogOut, Plus, ClipboardList, Bell, FolderOpen, Truck, Settings, UserCheck, Menu, X as XIcon } from 'lucide-react'
+import { Flame, LayoutDashboard, ShoppingCart, Users, Package, FileText, LogOut, Plus, ClipboardList, Bell, FolderOpen, Truck, Settings, UserCheck, Menu, X as XIcon, Tag, FilePlus, Sun, Moon } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase.js'
 
@@ -60,6 +60,16 @@ export default function AppLayout() {
   const isAdmin = profile?.role === 'admin'
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark')
+
+  useEffect(() => {
+    document.body.classList.toggle('light', theme === 'light')
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  function toggleTheme() {
+    setTheme(t => t === 'dark' ? 'light' : 'dark')
+  }
 
   useEffect(() => {
     setShowNotifs(false)
@@ -159,6 +169,9 @@ export default function AppLayout() {
                 <UserCheck size={16} /> Demandes
                 {pendingDemandes > 0 && <span className="badge">{pendingDemandes}</span>}
               </NavLink>
+              <NavLink to="/admin/devis" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                <FilePlus size={16} /> Devis
+              </NavLink>
               <NavLink to="/admin/produits" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                 <Package size={16} /> Produits
               </NavLink>
@@ -187,6 +200,9 @@ export default function AppLayout() {
               <NavLink to="/client/nouvelle-commande" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                 <Plus size={16} /> Nouvelle commande
               </NavLink>
+              <NavLink to="/client/tarifs" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                <Tag size={16} /> Tarifs
+              </NavLink>
               <NavLink to="/client/parametres" className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                 <Settings size={16} /> Paramètres
               </NavLink>
@@ -205,7 +221,18 @@ export default function AppLayout() {
               {showNotifs && <NotifPanel userId={profile?.id} />}
             </div>
           )}
-          <div className="user-chip" onClick={handleLogout} title="Se déconnecter">
+          <button onClick={toggleTheme} style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+          padding: '8px 10px', marginBottom: 8,
+          background: 'var(--bg-elevated)', border: '1px solid var(--border)',
+          borderRadius: 8, cursor: 'pointer', color: 'var(--text-muted)',
+          fontSize: 13, fontFamily: 'var(--font-body)', fontWeight: 500,
+          transition: 'all 0.15s',
+        }}>
+          {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+          {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+        </button>
+        <div className="user-chip" onClick={handleLogout} title="Se déconnecter">
             <div className="avatar">{initials}</div>
             <div className="user-info">
               <strong>{profile?.nom || 'Utilisateur'}</strong>

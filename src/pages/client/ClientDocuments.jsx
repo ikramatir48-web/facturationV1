@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase.js'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { FileText, ShoppingBag, Truck, Receipt, ChevronRight, Printer, ArrowLeft } from 'lucide-react'
+import { FileText, ShoppingBag, Truck, ChevronRight, Printer, ArrowLeft } from 'lucide-react'
 import { PrintBL, PrintBC, PrintFacture } from '../../components/shared/PrintDocs.jsx'
 
 function StatutBadge({ statut }) {
@@ -24,7 +24,6 @@ function StatutBadge({ statut }) {
 const SECTIONS = [
   { key: 'commandes', label: 'Bons de commandes', icon: ShoppingBag, color: '#0891b2' },
   { key: 'bls',       label: 'Bons de livraison', icon: Truck,       color: '#059669' },
-  { key: 'factures',  label: 'Factures',           icon: Receipt,     color: '#dc2626' },
 ]
 
 export default function ClientDocuments() {
@@ -197,7 +196,7 @@ export default function ClientDocuments() {
                         <td><StatutBadge statut={cmd.statut} /></td>
                         <td>
                           <button className="btn btn-ghost btn-sm" onClick={() => openPrintBC(cmd)}>
-                            <Printer size={13} /> Imprimer
+                            ⬇ Télécharger
                           </button>
                         </td>
                       </tr>
@@ -239,7 +238,7 @@ export default function ClientDocuments() {
                         <td><StatutBadge statut={bl.commandes?.statut || 'en_attente'} /></td>
                         <td>
                           <button className="btn btn-ghost btn-sm" onClick={() => openPrintBL(bl)}>
-                            <Printer size={13} /> Imprimer
+                            ⬇ Télécharger
                           </button>
                         </td>
                       </tr>
@@ -277,7 +276,7 @@ export default function ClientDocuments() {
                         <td style={{ fontWeight: 700 }}>{Number(f.montant_total).toFixed(2)} DH</td>
                         <td>
                           <button className="btn btn-ghost btn-sm" onClick={() => openPrintFacture(f)}>
-                            <Printer size={13} /> Imprimer
+                            ⬇ Télécharger
                           </button>
                         </td>
                       </tr>

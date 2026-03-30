@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase.js'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
-import { CheckCircle, Truck, X, Printer, CreditCard, ChevronDown } from 'lucide-react'
+import { CheckCircle, Truck, X, CreditCard } from 'lucide-react'
 import { PrintBL, PrintBC, PrintFacture } from '../../components/shared/PrintDocs.jsx'
 import { emailConfirmationCommande, emailBLDisponible, emailLivraisonEffectuee, emailFactureDisponible } from '../../lib/email.js'
 
@@ -418,7 +418,7 @@ export default function AdminCommandes() {
                   <div className="text-muted text-sm">{selected.cmd.numero_commande}</div>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => showPrintBC(selected.cmd, selected.lignes)}>
-                  <Printer size={13} /> Imprimer
+                  ⬇ Télécharger
                 </button>
               </div>
 
@@ -430,7 +430,7 @@ export default function AdminCommandes() {
                     <div className="text-muted text-sm">Bon de livraison</div>
                   </div>
                   <button className="btn btn-ghost btn-sm" onClick={() => showPrintBL(selected.bl, selected.cmd, selected.lignes)}>
-                    <Printer size={13} /> Imprimer
+                    ⬇ Télécharger
                   </button>
                 </div>
               ) : (
@@ -447,7 +447,7 @@ export default function AdminCommandes() {
                     <div className="text-muted text-sm">{selected.facture.montant_total} DH</div>
                   </div>
                   <button className="btn btn-ghost btn-sm" onClick={() => showPrintFacture(selected.facture, selected.bl, selected.cmd, selected.lignes)}>
-                    <Printer size={13} /> Imprimer
+                    ⬇ Télécharger
                   </button>
                 </div>
               ) : (

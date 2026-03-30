@@ -4,7 +4,7 @@ import { useAuth } from '../../hooks/useAuth.jsx'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { X, Printer, Plus } from 'lucide-react'
-import { PrintBL, PrintFacture, PrintBC } from '../../components/shared/PrintDocs.jsx'
+import { PrintBL, PrintBC } from '../../components/shared/PrintDocs.jsx'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 
@@ -86,10 +86,6 @@ export default function ClientCommandes() {
       finalLignes = data || []
     }
     setPrintDoc({ type: 'bc', commande: cmd, lignes: finalLignes, client: profile })
-  }
-
-  async function openPrintFacture(facture, bl, cmd, lignes) {
-    setPrintDoc({ type: 'facture', facture, bl, commande: cmd, lignes, client: profile })
   }
 
   const steps = [
@@ -229,7 +225,7 @@ export default function ClientCommandes() {
                   <div className="text-muted text-sm">{selected.cmd.numero_commande}</div>
                 </div>
                 <button className="btn btn-ghost btn-sm" onClick={() => openPrintBC(selected.cmd, selected.lignes)}>
-                  <Printer size={13} /> Imprimer
+                  ⬇ Télécharger
                 </button>
               </div>
 
@@ -240,7 +236,7 @@ export default function ClientCommandes() {
                     <div className="text-muted text-sm">Bon de livraison</div>
                   </div>
                   <button className="btn btn-ghost btn-sm" onClick={() => openPrintBL(selected.bl, selected.cmd, selected.lignes)}>
-                    <Printer size={13} /> Imprimer
+                    ⬇ Télécharger
                   </button>
                 </div>
               ) : selected.cmd.statut !== 'annulee' && (
@@ -249,19 +245,9 @@ export default function ClientCommandes() {
                 </div>
               )}
 
-              {selected.facture && selected.cmd.statut_paiement === 'paye' ? (
-                <div className="flex items-center justify-between" style={{ padding: '8px 12px', background: 'var(--success-dim)', borderRadius: 8 }}>
-                  <div>
-                    <div style={{ fontWeight: 600, color: 'var(--success)', fontSize: 13 }}>🧾 {selected.facture.numero_facture}</div>
-                    <div className="text-muted text-sm">{Number(selected.facture.montant_total).toFixed(2)} DH</div>
-                  </div>
-                  <button className="btn btn-ghost btn-sm" onClick={() => openPrintFacture(selected.facture, selected.bl, selected.cmd, selected.lignes)}>
-                    <Printer size={13} /> Imprimer
-                  </button>
-                </div>
-              ) : selected.cmd.statut !== 'annulee' && (
+              {selected.cmd.statut === 'livree' && (
                 <div style={{ padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 8, color: 'var(--text-muted)', fontSize: 13 }}>
-                  Facture disponible après confirmation du paiement
+                  La facture vous sera remise en main propre.
                 </div>
               )}
 
@@ -278,7 +264,7 @@ export default function ClientCommandes() {
 
       {printDoc?.type === 'bl'      && <PrintBL      {...printDoc} onClose={() => setPrintDoc(null)} />}
       {printDoc?.type === 'bc'      && <PrintBC      {...printDoc} onClose={() => setPrintDoc(null)} />}
-      {printDoc?.type === 'facture' && <PrintFacture {...printDoc} onClose={() => setPrintDoc(null)} />}
+
     </div>
   )
 }

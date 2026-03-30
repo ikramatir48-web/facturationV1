@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabase.js'
+import GuideClient from '../../components/shared/GuideClient.jsx'
 import { useAuth } from '../../hooks/useAuth.jsx'
 import { useNavigate } from 'react-router-dom'
 import { Plus, ClipboardList } from 'lucide-react'
@@ -20,6 +21,17 @@ function StatutBadge({ statut }) {
 
 export default function ClientDashboard() {
   const { profile } = useAuth()
+  const [showGuide, setShowGuide] = useState(() => {
+    // Afficher le guide si première visite
+    const key = `guide_seen_${profile?.id || 'user'}`
+    return !localStorage.getItem(key)
+  })
+
+  function closeGuide() {
+    const key = `guide_seen_${profile?.id || 'user'}`
+    localStorage.setItem(key, 'true')
+    setShowGuide(false)
+  }
   const navigate = useNavigate()
   const [stats, setStats] = useState({ total: 0, enCours: 0, livrees: 0 })
   const [recent, setRecent] = useState([])
@@ -51,6 +63,7 @@ export default function ClientDashboard() {
 
   return (
     <div>
+      {showGuide && <GuideClient onClose={closeGuide} />}
       <div className="page-header">
         <h2>{greeting}, {profile?.nom?.split(' ')[0]} 👋</h2>
         <p>

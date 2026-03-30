@@ -8,12 +8,14 @@ import AdminProduits from './pages/admin/AdminProduits.jsx'
 import AdminFactures from './pages/admin/AdminFactures.jsx'
 import AdminLivreurs from './pages/admin/AdminLivreurs.jsx'
 import AdminParametres from './pages/admin/AdminParametres.jsx'
+import AdminDevis from './pages/admin/AdminDevis.jsx'
 import AdminDemandes from './pages/admin/AdminDemandes.jsx'
 import ClientDashboard from './pages/client/ClientDashboard.jsx'
 import ClientCommandes from './pages/client/ClientCommandes.jsx'
 import ClientNouvelleCommande from './pages/client/ClientNouvelleCommande.jsx'
 import ClientDocuments from './pages/client/ClientDocuments.jsx'
 import ClientParametres from './pages/client/ClientParametres.jsx'
+import ClientTarifs from './pages/client/ClientTarifs.jsx'
 import AppLayout from './components/shared/AppLayout.jsx'
 import ForceSetup from './pages/ForceSetup.jsx'
 
@@ -33,6 +35,7 @@ function ProtectedRoute({ children, requiredRole }) {
 }
 
 export default function App() {
+  const { user, profile } = useAuth()
   return (
     <Routes>
       <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" replace />} />
@@ -46,6 +49,7 @@ export default function App() {
         <Route path="livreurs" element={<AdminLivreurs />} />
         <Route path="parametres" element={<AdminParametres />} />
         <Route path="demandes" element={<AdminDemandes />} />
+        <Route path="devis" element={<AdminDevis />} />
       </Route>
 
       <Route path="/client" element={<ProtectedRoute requiredRole="client"><AppLayout /></ProtectedRoute>}>
@@ -54,6 +58,7 @@ export default function App() {
         <Route path="nouvelle-commande" element={<ClientNouvelleCommande />} />
         <Route path="documents" element={<ClientDocuments />} />
         <Route path="parametres" element={<ClientParametres />} />
+        <Route path="tarifs" element={<ClientTarifs />} />
       </Route>
 
       <Route path="/" element={

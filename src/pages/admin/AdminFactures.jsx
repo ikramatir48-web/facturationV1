@@ -8,6 +8,8 @@ import { PrintBL, PrintFacture } from '../../components/shared/PrintDocs.jsx'
 
 export default function AdminFactures() {
   const [tab, setTab]           = useState('factures')
+  const [mentionModal, setMentionModal] = useState(null) // {facture, bl, commande, lignes}
+  const [mention, setMention]   = useState(null) // ORIGINAL or DUPLICATA after choice
   const [clients, setClients]   = useState([])
   const [selectedClient, setSelectedClient] = useState(null)
   const [clientSearch, setClientSearch]     = useState('')
@@ -77,7 +79,22 @@ export default function AdminFactures() {
   async function openPrintFacture(f) {
     const { data: lignes } = await supabase.from('lignes_commande').select('*, produits(nom)').eq('commande_id', f.commande_id)
     const { data: bl } = await supabase.from('bons_livraison').select('*').eq('id', f.bl_id).maybeSingle()
-    setPrintFact({ facture: f, bl, commande: f.commandes, lignes: lignes || [], client: selectedClient, tva })
+    // Vérifier si original déjà donné
+    const { data: factData } = await supabase.from('factures').select('original_remis, original_remis_date').eq('id', f.id).maybeSingle()
+    setMentionModal({ facture: { ...f, ...factData }, bl, commande: f.commandes, lignes: lignes || [] })
+  }
+
+  async function confirmerMention(isDuplicata) {
+    const { facture, bl, commande, lignes } = mentionModal
+    // Si original, marquer comme remis
+    if (!isDuplicata) {
+      await supabase.from('factures').update({
+        original_remis: true,
+        original_remis_date: new Date().toISOString()
+      }).eq('id', facture.id)
+    }
+    setPrintFact({ facture, bl, commande, lignes, client: selectedClient, tva, isDuplicata })
+    setMentionModal(null)
   }
 
   // Générer une facture groupée pour plusieurs BL
@@ -139,6 +156,14 @@ export default function AdminFactures() {
     c.nom.toLowerCase().includes(clientSearch.toLowerCase()) ||
     c.numero_client?.toLowerCase().includes(clientSearch.toLowerCase())
   )
+
+  async function toggleOriginalRemis(factureId, currentValue) {
+    await supabase.from('factures').update({
+      original_remis: !currentValue,
+      original_remis_date: !currentValue ? new Date().toISOString() : null
+    }).eq('id', factureId)
+    if (selectedClient) loadClientData(selectedClient.id)
+  }
 
   return (
     <div>
@@ -225,7 +250,18 @@ export default function AdminFactures() {
                               <td><span className="badge badge-blue">{f.bons_livraison?.numero_bl}</span></td>
                               <td className="text-muted">{format(new Date(f.date_facture), 'dd MMM yyyy', { locale: fr })}</td>
                               <td style={{ fontWeight:700 }}>{Number(f.montant_total).toFixed(2)} DH</td>
-                              <td><button className="btn btn-ghost btn-sm" onClick={() => openPrintFacture(f)}><Printer size={13} /> Imprimer</button></td>
+                              <td>
+                                <div className="flex gap-2 items-center">
+                                  <button className="btn btn-ghost btn-sm" onClick={() => openPrintFacture(f)}>⬇ Télécharger</button>
+                                  <button
+                                    onClick={() => toggleOriginalRemis(f.id, f.original_remis)}
+                                    style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: 'none', cursor: 'pointer', background: f.original_remis ? 'var(--success-dim)' : 'var(--bg-elevated)', color: f.original_remis ? 'var(--success)' : 'var(--text-muted)' }}
+                                    title={f.original_remis ? 'Original remis — cliquer pour annuler' : 'Marquer original remis'}
+                                  >
+                                    {f.original_remis ? '✓ Original remis' : 'Original non remis'}
+                                  </button>
+                                </div>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -246,7 +282,7 @@ export default function AdminFactures() {
                                   {bl.commandes?.statut_paiement === 'paye' ? '✓ Payé' : '⏳ Non payé'}
                                 </span>
                               </td>
-                              <td><button className="btn btn-ghost btn-sm" onClick={() => openPrintBL(bl)}><Printer size={13} /> Imprimer</button></td>
+                              <td><button className="btn btn-ghost btn-sm" onClick={() => openPrintBL(bl)}>⬇ Télécharger</button></td>
                             </tr>
                           ))}
                         </tbody>
@@ -276,6 +312,45 @@ export default function AdminFactures() {
           )}
         </div>
       </div>
+
+      {/* Modal mention Original/Duplicata */}
+      {mentionModal && (
+        <div className="modal-overlay" onClick={() => setMentionModal(null)}>
+          <div className="modal" style={{ maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Type de facture</h3>
+              <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setMentionModal(null)}><X size={15} /></button>
+            </div>
+            <div className="modal-body">
+              {mentionModal.facture?.original_remis && (
+                <div style={{ padding: '10px 14px', background: 'var(--warning-dim)', borderRadius: 8, marginBottom: 16, fontSize: 13, color: 'var(--warning)', fontWeight: 600 }}>
+                  ⚠ L'original a déjà été remis au client
+                  {mentionModal.facture?.original_remis_date && (
+                    <div style={{ fontWeight: 400, fontSize: 12, marginTop: 4 }}>
+                      Le {new Date(mentionModal.facture.original_remis_date).toLocaleDateString('fr-FR')}
+                    </div>
+                  )}
+                </div>
+              )}
+              <p style={{ marginBottom: 20, color: 'var(--text-muted)', fontSize: 13 }}>
+                Choisissez le type de document à télécharger :
+              </p>
+              <div className="flex gap-3">
+                <button className="btn btn-primary" style={{ flex: 1, justifyContent: 'center', flexDirection: 'column', padding: 16, height: 'auto' }}
+                  onClick={() => confirmerMention(false)}>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>ORIGINAL</div>
+                  <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4 }}>Première remise</div>
+                </button>
+                <button className="btn btn-ghost" style={{ flex: 1, justifyContent: 'center', flexDirection: 'column', padding: 16, height: 'auto' }}
+                  onClick={() => confirmerMention(true)}>
+                  <div style={{ fontWeight: 700, fontSize: 16 }}>DUPLICATA</div>
+                  <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4 }}>Copie supplémentaire</div>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal TVA */}
       {showTvaModal && (
